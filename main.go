@@ -127,15 +127,14 @@ func checkBitswapCID(ctx context.Context, c cid.Cid, ma multiaddr.Multiaddr) (*b
 	}
 
 	// in case for some reason we're sent a bunch of messages (e.g. wants) from a peer without them responding to our query
+	// FIXME: Why would this be the case?
+	sctx, _ := context.WithTimeout(ctx, time.Second*10)
 loop:
-	for i := 0; i < 3; i++ {
-		sctx, cancel := context.WithTimeout(ctx, time.Second*3)
+	for ;; {
 		var res msgOrErr
 		select {
 		case res = <-rcv.result:
-			cancel()
 		case <-sctx.Done():
-			cancel()
 			break loop
 		}
 
