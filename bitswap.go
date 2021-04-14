@@ -2,22 +2,17 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/ipfs/go-cid"
-	"github.com/multiformats/go-multiaddr"
-
-	nrouting "github.com/ipfs/go-ipfs-routing/none"
-	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p-core/peer"
-	quic "github.com/libp2p/go-libp2p-quic-transport"
-	"github.com/libp2p/go-tcp-transport"
+	"github.com/multiformats/go-multiaddr"
 
 	bsmsg "github.com/ipfs/go-bitswap/message"
 	bsmsgpb "github.com/ipfs/go-bitswap/message/pb"
 	bsnet "github.com/ipfs/go-bitswap/network"
+	nrouting "github.com/ipfs/go-ipfs-routing/none"
 )
 
 type bsCheckOutput struct {
@@ -26,31 +21,8 @@ type bsCheckOutput struct {
 	Error     error
 }
 
-func checkBitswapCmd(ctx context.Context, cidStr, maStr string) error {
-	bsCid, err := cid.Decode(cidStr)
-	if err != nil {
-		return err
-	}
-
-	ma, err := multiaddr.NewMultiaddr(maStr)
-	if err != nil {
-		return err
-	}
-
-	output, err := checkBitswapCID(ctx, bsCid, ma)
-	if err != nil {
-		return err
-	}
-
-	jsOut, err := json.Marshal(output)
-	if err != nil {
-		return err
-	}
-	fmt.Printf("%s\n", jsOut)
-}
-
 func checkBitswapCID(ctx context.Context, c cid.Cid, ma multiaddr.Multiaddr) (*bsCheckOutput, error) {
-	h, err := libp2p.New(ctx, libp2p.Transport(tcp.NewTCPTransport), libp2p.Transport(quic.NewTransport))
+	h, err := libp2pHost(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +38,7 @@ func checkBitswapCID(ctx context.Context, c cid.Cid, ma multiaddr.Multiaddr) (*b
 
 	target := ai.ID
 
-	nilRouter, err := nrouting.ConstructNilRouting(nil, nil, nil, nil)
+	nilRouter, err := nrouting.ConstructNilRouting(context.TODO(), nil, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +60,8 @@ func checkBitswapCID(ctx context.Context, c cid.Cid, ma multiaddr.Multiaddr) (*b
 
 	// in case for some reason we're sent a bunch of messages (e.g. wants) from a peer without them responding to our query
 	// FIXME: Why would this be the case?
-	sctx, _ := context.WithTimeout(ctx, time.Second*10)
+	sctx, cancel := context.WithTimeout(ctx, time.Second*10)
+	defer cancel()
 loop:
 	for {
 		var res msgOrErr
@@ -182,12 +155,8 @@ func (r *bsReceiver) ReceiveError(err error) {
 	}
 }
 
-func (r *bsReceiver) PeerConnected(id peer.ID) {
-	return
-}
+func (r *bsReceiver) PeerConnected(id peer.ID) {}
 
-func (r *bsReceiver) PeerDisconnected(id peer.ID) {
-	return
-}
+func (r *bsReceiver) PeerDisconnected(id peer.ID) {}
 
 var _ bsnet.Receiver = (*bsReceiver)(nil)
