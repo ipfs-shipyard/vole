@@ -71,6 +71,24 @@ func dhtGet(ctx context.Context, key []byte, proto protocol.ID, ma multiaddr.Mul
 	return rec, nil
 }
 
+func dhtGetProvs(ctx context.Context, key []byte, proto protocol.ID, ma multiaddr.Multiaddr) ([]*peer.AddrInfo, error) {
+	ai, err := peer.AddrInfoFromP2pAddr(ma)
+	if err != nil {
+		return nil, err
+	}
+
+	m, err := dhtProtocolMessenger(ctx, proto, ai)
+	if err != nil {
+		return nil, err
+	}
+
+	provs, _, err := m.GetProviders(ctx, ai.ID, key)
+	if err != nil {
+		return nil, err
+	}
+	return provs, nil
+}
+
 func dhtGetClosestPeers(ctx context.Context, key []byte, proto protocol.ID, ma multiaddr.Multiaddr) ([]*peer.AddrInfo, error) {
 	ai, err := peer.AddrInfoFromP2pAddr(ma)
 	if err != nil {

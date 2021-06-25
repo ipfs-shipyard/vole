@@ -9,6 +9,7 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/ipfs/go-cid"
+	"github.com/libp2p/go-libp2p-core/peer"
 	"github.com/libp2p/go-libp2p-core/protocol"
 	"github.com/multiformats/go-multiaddr"
 	"github.com/multiformats/go-multibase"
@@ -165,6 +166,53 @@ func main() {
 						},
 					},
 					{
+						Name:        "getprovs",
+						ArgsUsage:   "<cid> <multiaddr>",
+						Usage:       "gets provider records from a DHT node",
+						Description: "creates a libp2p peer and sends a DHT get providers request to the target",
+						Action: func(c *cli.Context) error {
+							if c.NArg() != 2 {
+								return fmt.Errorf("invalid number of arguments")
+							}
+							cidStr := c.Args().Get(0)
+							maStr := c.Args().Get(1)
+							protoID := c.String("protocolID")
+							showAddrs := c.Bool("show-addrs")
+
+							dataCID, err := cid.Decode(cidStr)
+							if err != nil {
+								return err
+							}
+
+							ma, err := multiaddr.NewMultiaddr(maStr)
+							if err != nil {
+								return err
+							}
+
+							provs, err := dhtGetProvs(c.Context, dataCID.Hash(), protocol.ID(protoID), ma)
+							if err != nil {
+								return err
+							}
+
+							return printPeerIDs(provs, showAddrs)
+						},
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:        "protocolID",
+								Usage:       "the protocol ID",
+								DefaultText: "/ipfs/kad/1.0.0",
+								Value:       "/ipfs/kad/1.0.0",
+							},
+							&cli.BoolFlag{
+								Name:        "show-addrs",
+								Aliases:     []string{"a"},
+								Usage:       "show the peer address or just the IDs",
+								DefaultText: "false",
+								Value:       false,
+							},
+						},
+					},
+					{
 						Name:        "gcp",
 						ArgsUsage:   "<multibase-bytes-key> <multiaddr>",
 						Usage:       "gets the closest peers to the target from a DHT node",
@@ -193,24 +241,7 @@ func main() {
 								return err
 							}
 
-							for _, a := range ais {
-								if showAddrs {
-									b, err := a.MarshalJSON()
-									if err != nil {
-										return err
-									}
-									var pretty bytes.Buffer
-									err = json.Indent(&pretty, b, "", "\t")
-									if err != nil {
-										return err
-									}
-									fmt.Println(pretty.String())
-								} else {
-									fmt.Println(a.ID)
-								}
-							}
-
-							return nil
+							return printPeerIDs(ais, showAddrs)
 						},
 						Flags: []cli.Flag{
 							&cli.StringFlag{
@@ -237,4 +268,25 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func printPeerIDs(ais []*peer.AddrInfo, showAddrs bool) error {
+	for _, a := range ais {
+		if showAddrs {
+			b, err := a.MarshalJSON()
+			if err != nil {
+				return err
+			}
+			var pretty bytes.Buffer
+			err = json.Indent(&pretty, b, "", "\t")
+			if err != nil {
+				return err
+			}
+			fmt.Println(pretty.String())
+		} else {
+			fmt.Println(a.ID)
+		}
+	}
+
+	return nil
 }
