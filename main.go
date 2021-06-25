@@ -116,7 +116,7 @@ func main() {
 						Name:        "get",
 						ArgsUsage:   "<multibase-bytes-key> <multiaddr>",
 						Usage:       "get a record from a DHT node",
-						Description: "creates a libp2p peer and sends a DHT get request to the target - prints true if the peer reports it has the CID and false otherwise",
+						Description: "creates a libp2p peer and sends a DHT get request to the target",
 						Action: func(c *cli.Context) error {
 							if c.NArg() != 2 {
 								return fmt.Errorf("invalid number of arguments")
