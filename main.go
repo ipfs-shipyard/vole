@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -160,6 +161,70 @@ func main() {
 								Usage:       "multibase to encode the result in (e.g. b or base32 for base32 encoding)",
 								DefaultText: "base32",
 								Value:       "base32",
+							},
+						},
+					},
+					{
+						Name:        "gcp",
+						ArgsUsage:   "<multibase-bytes-key> <multiaddr>",
+						Usage:       "gets the closest peers to the target from a DHT node",
+						Description: "creates a libp2p peer and sends a DHT get closest peers request to the target - prints the peers and their addresses",
+						Action: func(c *cli.Context) error {
+							if c.NArg() != 2 {
+								return fmt.Errorf("invalid number of arguments")
+							}
+							keyStr := c.Args().Get(0)
+							maStr := c.Args().Get(1)
+							protoID := c.String("protocolID")
+							showAddrs := c.Bool("show-addrs")
+
+							_, keyBytes, err := multibase.Decode(keyStr)
+							if err != nil {
+								return err
+							}
+
+							ma, err := multiaddr.NewMultiaddr(maStr)
+							if err != nil {
+								return err
+							}
+
+							ais, err := dhtGetClosestPeers(c.Context, keyBytes, protocol.ID(protoID), ma)
+							if err != nil {
+								return err
+							}
+
+							for _, a := range ais {
+								if showAddrs {
+									b, err := a.MarshalJSON()
+									if err != nil {
+										return err
+									}
+									var pretty bytes.Buffer
+									err = json.Indent(&pretty, b, "", "\t")
+									if err != nil {
+										return err
+									}
+									fmt.Println(pretty.String())
+								} else {
+									fmt.Println(a.ID)
+								}
+							}
+
+							return nil
+						},
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:        "protocolID",
+								Usage:       "the protocol ID",
+								DefaultText: "/ipfs/kad/1.0.0",
+								Value:       "/ipfs/kad/1.0.0",
+							},
+							&cli.BoolFlag{
+								Name:        "show-addrs",
+								Aliases:     []string{"a"},
+								Usage:       "show the peer address or just the IDs",
+								DefaultText: "false",
+								Value:       false,
 							},
 						},
 					},
