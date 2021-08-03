@@ -1,4 +1,4 @@
-package main
+package vole
 
 import (
 	"context"
@@ -15,13 +15,13 @@ import (
 	nrouting "github.com/ipfs/go-ipfs-routing/none"
 )
 
-type bsCheckOutput struct {
+type BsCheckOutput struct {
 	Found     bool
 	Responded bool
 	Error     error
 }
 
-func checkBitswapCID(ctx context.Context, c cid.Cid, ma multiaddr.Multiaddr) (*bsCheckOutput, error) {
+func CheckBitswapCID(ctx context.Context, c cid.Cid, ma multiaddr.Multiaddr) (*BsCheckOutput, error) {
 	h, err := libp2pHost(ctx)
 	if err != nil {
 		return nil, err
@@ -72,7 +72,7 @@ loop:
 		}
 
 		if res.err != nil {
-			return &bsCheckOutput{
+			return &BsCheckOutput{
 				Found:     false,
 				Responded: true,
 				Error:     res.err,
@@ -85,7 +85,7 @@ loop:
 
 		for _, msgC := range res.msg.Blocks() {
 			if msgC.Cid().Equals(c) {
-				return &bsCheckOutput{
+				return &BsCheckOutput{
 					Found:     true,
 					Responded: true,
 					Error:     nil,
@@ -95,7 +95,7 @@ loop:
 
 		for _, msgC := range res.msg.Haves() {
 			if msgC.Equals(c) {
-				return &bsCheckOutput{
+				return &BsCheckOutput{
 					Found:     true,
 					Responded: true,
 					Error:     nil,
@@ -105,7 +105,7 @@ loop:
 
 		for _, msgC := range res.msg.DontHaves() {
 			if msgC.Equals(c) {
-				return &bsCheckOutput{
+				return &BsCheckOutput{
 					Found:     false,
 					Responded: true,
 					Error:     nil,
@@ -114,7 +114,7 @@ loop:
 		}
 	}
 
-	return &bsCheckOutput{
+	return &BsCheckOutput{
 		Found:     false,
 		Responded: false,
 		Error:     nil,

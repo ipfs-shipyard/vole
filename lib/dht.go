@@ -1,4 +1,4 @@
-package main
+package vole
 
 import (
 	"context"
@@ -16,7 +16,7 @@ import (
 	recpb "github.com/libp2p/go-libp2p-record/pb"
 )
 
-func dhtProtocolMessenger(ctx context.Context, proto protocol.ID, ai *peer.AddrInfo) (*dhtpb.ProtocolMessenger, error) {
+func DhtProtocolMessenger(ctx context.Context, proto protocol.ID, ai *peer.AddrInfo) (*dhtpb.ProtocolMessenger, error) {
 	h, err := libp2pHost(ctx)
 	if err != nil {
 		return nil, err
@@ -39,13 +39,13 @@ func dhtProtocolMessenger(ctx context.Context, proto protocol.ID, ai *peer.AddrI
 	return messenger, nil
 }
 
-func dhtPut(ctx context.Context, key, value []byte, proto protocol.ID, ma multiaddr.Multiaddr) error {
+func DhtPut(ctx context.Context, key, value []byte, proto protocol.ID, ma multiaddr.Multiaddr) error {
 	ai, err := peer.AddrInfoFromP2pAddr(ma)
 	if err != nil {
 		return err
 	}
 
-	m, err := dhtProtocolMessenger(ctx, proto, ai)
+	m, err := DhtProtocolMessenger(ctx, proto, ai)
 	if err != nil {
 		return err
 	}
@@ -53,13 +53,13 @@ func dhtPut(ctx context.Context, key, value []byte, proto protocol.ID, ma multia
 	return m.PutValue(ctx, ai.ID, &recpb.Record{Key: key, Value: value})
 }
 
-func dhtGet(ctx context.Context, key []byte, proto protocol.ID, ma multiaddr.Multiaddr) (*recpb.Record, error) {
+func DhtGet(ctx context.Context, key []byte, proto protocol.ID, ma multiaddr.Multiaddr) (*recpb.Record, error) {
 	ai, err := peer.AddrInfoFromP2pAddr(ma)
 	if err != nil {
 		return nil, err
 	}
 
-	m, err := dhtProtocolMessenger(ctx, proto, ai)
+	m, err := DhtProtocolMessenger(ctx, proto, ai)
 	if err != nil {
 		return nil, err
 	}
@@ -71,13 +71,13 @@ func dhtGet(ctx context.Context, key []byte, proto protocol.ID, ma multiaddr.Mul
 	return rec, nil
 }
 
-func dhtGetProvs(ctx context.Context, key []byte, proto protocol.ID, ma multiaddr.Multiaddr) ([]*peer.AddrInfo, error) {
+func DhtGetProvs(ctx context.Context, key []byte, proto protocol.ID, ma multiaddr.Multiaddr) ([]*peer.AddrInfo, error) {
 	ai, err := peer.AddrInfoFromP2pAddr(ma)
 	if err != nil {
 		return nil, err
 	}
 
-	m, err := dhtProtocolMessenger(ctx, proto, ai)
+	m, err := DhtProtocolMessenger(ctx, proto, ai)
 	if err != nil {
 		return nil, err
 	}
@@ -89,13 +89,13 @@ func dhtGetProvs(ctx context.Context, key []byte, proto protocol.ID, ma multiadd
 	return provs, nil
 }
 
-func dhtGetClosestPeers(ctx context.Context, key []byte, proto protocol.ID, ma multiaddr.Multiaddr) ([]*peer.AddrInfo, error) {
+func DhtGetClosestPeers(ctx context.Context, key []byte, proto protocol.ID, ma multiaddr.Multiaddr) ([]*peer.AddrInfo, error) {
 	ai, err := peer.AddrInfoFromP2pAddr(ma)
 	if err != nil {
 		return nil, err
 	}
 
-	m, err := dhtProtocolMessenger(ctx, proto, ai)
+	m, err := DhtProtocolMessenger(ctx, proto, ai)
 	if err != nil {
 		return nil, err
 	}

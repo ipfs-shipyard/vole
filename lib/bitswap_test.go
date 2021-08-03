@@ -1,8 +1,10 @@
-package main
+package vole
 
 import (
 	"context"
 	"encoding/json"
+	"testing"
+
 	"github.com/ipfs/go-bitswap"
 	bsnet "github.com/ipfs/go-bitswap/network"
 	blocks "github.com/ipfs/go-block-format"
@@ -13,7 +15,6 @@ import (
 	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p-core/peer"
 	"github.com/multiformats/go-multihash"
-	"testing"
 )
 
 func TestBitswapCheckPresent(t *testing.T) {
@@ -47,7 +48,7 @@ func TestBitswapCheckPresent(t *testing.T) {
 
 	_ = bitswap.New(ctx, bsnetwork, bstore)
 
-	checkOutput, err := checkBitswapCID(ctx, blk.Cid(), hostAddrs[0])
+	checkOutput, err := CheckBitswapCID(ctx, blk.Cid(), hostAddrs[0])
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -88,7 +89,7 @@ func TestBitswapCheckNotPresent(t *testing.T) {
 
 	_ = bitswap.New(ctx, bsnetwork, bstore)
 
-	checkOutput, err := checkBitswapCID(ctx, blk.Cid(), hostAddrs[0])
+	checkOutput, err := CheckBitswapCID(ctx, blk.Cid(), hostAddrs[0])
 	if err != nil {
 		t.Fatal(err)
 	}
