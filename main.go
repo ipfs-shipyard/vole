@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	vole "github.com/aschmahmann/vole/lib"
 	"github.com/urfave/cli/v2"
 
 	"github.com/ipfs/go-cid"
@@ -52,7 +53,7 @@ func main() {
 								return err
 							}
 
-							output, err := checkBitswapCID(c.Context, bsCid, ma)
+							output, err := vole.CheckBitswapCID(c.Context, bsCid, ma)
 							if err != nil {
 								return err
 							}
@@ -101,7 +102,7 @@ func main() {
 								return err
 							}
 
-							return dhtPut(c.Context, keyBytes, valBytes, protocol.ID(protoID), ma)
+							return vole.DhtPut(c.Context, keyBytes, valBytes, protocol.ID(protoID), ma)
 						},
 						Flags: []cli.Flag{
 							&cli.StringFlag{
@@ -141,7 +142,7 @@ func main() {
 								return err
 							}
 
-							rec, err := dhtGet(c.Context, keyBytes, protocol.ID(protoID), ma)
+							rec, err := vole.DhtGet(c.Context, keyBytes, protocol.ID(protoID), ma)
 							if err != nil {
 								return err
 							}
@@ -189,7 +190,7 @@ func main() {
 								return err
 							}
 
-							provs, err := dhtGetProvs(c.Context, dataCID.Hash(), protocol.ID(protoID), ma)
+							provs, err := vole.DhtGetProvs(c.Context, dataCID.Hash(), protocol.ID(protoID), ma)
 							if err != nil {
 								return err
 							}
@@ -236,7 +237,7 @@ func main() {
 								return err
 							}
 
-							ais, err := dhtGetClosestPeers(c.Context, keyBytes, protocol.ID(protoID), ma)
+							ais, err := vole.DhtGetClosestPeers(c.Context, keyBytes, protocol.ID(protoID), ma)
 							if err != nil {
 								return err
 							}

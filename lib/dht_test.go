@@ -1,14 +1,15 @@
-package main
+package vole
 
 import (
 	"bytes"
 	"context"
+	"testing"
+
 	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p-core/peer"
 	"github.com/libp2p/go-libp2p-core/protocol"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	record "github.com/libp2p/go-libp2p-record"
-	"testing"
 )
 
 func TestDhtPutGet(t *testing.T) {
@@ -37,11 +38,11 @@ func TestDhtPutGet(t *testing.T) {
 	k := []byte("/testval/fookey")
 	v := []byte("the data")
 	proto := protocol.ID("/test/kad/1.0.0")
-	if err := dhtPut(ctx, k, v, proto, hostAddrs[0]); err != nil {
+	if err := DhtPut(ctx, k, v, proto, hostAddrs[0]); err != nil {
 		t.Fatal(err)
 	}
 
-	rec, err := dhtGet(ctx, k, proto, hostAddrs[0])
+	rec, err := DhtGet(ctx, k, proto, hostAddrs[0])
 	if err != nil {
 		t.Fatal(err)
 	}
