@@ -17,6 +17,7 @@ require (
 	github.com/libp2p/go-msgio v0.0.6
 	github.com/libp2p/go-tcp-transport v0.2.1
 	github.com/multiformats/go-multiaddr v0.3.1
+	github.com/multiformats/go-multiaddr-dns v0.2.0
 	github.com/multiformats/go-multibase v0.0.3
 	github.com/multiformats/go-multihash v0.0.15
 	github.com/urfave/cli/v2 v2.3.0
