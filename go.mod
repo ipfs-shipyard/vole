@@ -1,6 +1,6 @@
 module github.com/aschmahmann/vole
 
-go 1.15
+go 1.16
 
 require (
 	github.com/ipfs/go-bitswap v0.5.1
