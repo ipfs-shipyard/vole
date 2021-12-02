@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	madns "github.com/multiformats/go-multiaddr-dns"
 	"os"
 
 	vole "github.com/aschmahmann/vole/lib"
@@ -260,6 +261,32 @@ func main() {
 							},
 						},
 					},
+				},
+			},
+			{
+				Name:        "dnsaddr",
+				ArgsUsage:   "<domain>",
+				Usage:       "get the multiaddrs from a domain name with a dnsaddr",
+				Description: "creates a DNSAddr lookup and returns all the multiaddrs",
+				Action: func(c *cli.Context) error {
+					if c.NArg() != 1 {
+						return fmt.Errorf("invalid number of arguments")
+					}
+					maStr := fmt.Sprintf("/dnsaddr/%s", c.Args().Get(0))
+
+					addr, err := multiaddr.NewMultiaddr(maStr)
+					if err != nil {
+						return err
+					}
+					addrs, err := madns.DefaultResolver.Resolve(c.Context, addr)
+					if err != nil {
+						return err
+					}
+
+					for _, a := range addrs {
+						fmt.Println(a)
+					}
+					return nil
 				},
 			},
 		},
