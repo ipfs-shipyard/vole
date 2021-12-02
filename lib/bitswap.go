@@ -22,7 +22,7 @@ type BsCheckOutput struct {
 }
 
 func CheckBitswapCID(ctx context.Context, c cid.Cid, ma multiaddr.Multiaddr) (*BsCheckOutput, error) {
-	h, err := libp2pHost(ctx)
+	h, err := libp2pHost()
 	if err != nil {
 		return nil, err
 	}

@@ -16,7 +16,7 @@ func TestDhtPutGet(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	h, err := libp2p.New(ctx)
+	h, err := libp2p.New()
 	if err != nil {
 		t.Fatal(err)
 	}
