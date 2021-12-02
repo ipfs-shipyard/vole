@@ -21,7 +21,7 @@ func TestBitswapCheckPresent(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	h, err := libp2p.New(ctx)
+	h, err := libp2p.New()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,7 +42,7 @@ func TestBitswapCheckPresent(t *testing.T) {
 	data := []byte("existing data")
 	blk := getBlock(t, data)
 
-	if err := bstore.Put(blk); err != nil {
+	if err := bstore.Put(ctx, blk); err != nil {
 		t.Fatal(err)
 	}
 
@@ -66,7 +66,7 @@ func TestBitswapCheckNotPresent(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	h, err := libp2p.New(ctx)
+	h, err := libp2p.New()
 	if err != nil {
 		t.Fatal(err)
 	}

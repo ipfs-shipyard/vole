@@ -8,7 +8,6 @@ import (
 	"github.com/libp2p/go-libp2p-core/network"
 	"github.com/libp2p/go-libp2p-core/peer"
 	"github.com/libp2p/go-libp2p-core/protocol"
-	record "github.com/libp2p/go-libp2p-record"
 	"github.com/libp2p/go-msgio/protoio"
 	"github.com/multiformats/go-multiaddr"
 
@@ -17,7 +16,7 @@ import (
 )
 
 func DhtProtocolMessenger(ctx context.Context, proto protocol.ID, ai *peer.AddrInfo) (*dhtpb.ProtocolMessenger, error) {
-	h, err := libp2pHost(ctx)
+	h, err := libp2pHost()
 	if err != nil {
 		return nil, err
 	}
@@ -31,7 +30,7 @@ func DhtProtocolMessenger(ctx context.Context, proto protocol.ID, ai *peer.AddrI
 		protocols: []protocol.ID{proto},
 		timeout:   time.Second * 5,
 	}
-	messenger, err := dhtpb.NewProtocolMessenger(ms, dhtpb.WithValidator(&nilValidator{}))
+	messenger, err := dhtpb.NewProtocolMessenger(ms)
 	if err != nil {
 		return nil, err
 	}
@@ -170,15 +169,3 @@ func (ms *dhtMsgSender) SendMessage(ctx context.Context, p peer.ID, pmes *dhtpb.
 }
 
 var _ dhtpb.MessageSender = (*dhtMsgSender)(nil)
-
-type nilValidator struct{}
-
-func (n nilValidator) Validate(key string, value []byte) error {
-	return nil
-}
-
-func (n nilValidator) Select(key string, values [][]byte) (int, error) {
-	panic("implement me")
-}
-
-var _ record.Validator = (*nilValidator)(nil)
