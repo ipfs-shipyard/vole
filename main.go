@@ -2,17 +2,30 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
-	madns "github.com/multiformats/go-multiaddr-dns"
 	"os"
+
+	"github.com/cheggaaa/pb/v3"
+	ipld "github.com/ipfs/go-ipld-format"
+	madns "github.com/multiformats/go-multiaddr-dns"
 
 	vole "github.com/aschmahmann/vole/lib"
 	"github.com/urfave/cli/v2"
 
+	"github.com/ipfs/go-bitswap"
+	bsnet "github.com/ipfs/go-bitswap/network"
+	"github.com/ipfs/go-blockservice"
 	"github.com/ipfs/go-cid"
+	"github.com/ipfs/go-datastore"
+	"github.com/ipfs/go-datastore/sync"
+	blockstore "github.com/ipfs/go-ipfs-blockstore"
+	"github.com/ipfs/go-merkledag"
+	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p-core/peer"
 	"github.com/libp2p/go-libp2p-core/protocol"
+	rhelp "github.com/libp2p/go-libp2p-routing-helpers"
 	"github.com/multiformats/go-multiaddr"
 	"github.com/multiformats/go-multibase"
 )
@@ -32,42 +45,8 @@ func main() {
 				Name:  "bitswap",
 				Usage: "tools for working with bitswap",
 				Subcommands: []*cli.Command{
-					{
-						Name:        "check",
-						ArgsUsage:   "<cid> <multiaddr>",
-						Usage:       "check if a peer has a CID",
-						Description: "creates a libp2p peer and sends a bitswap request to the target - prints true if the peer reports it has the CID and false otherwise",
-						Action: func(c *cli.Context) error {
-							if c.NArg() != 2 {
-								return fmt.Errorf("invalid number of arguments")
-							}
-							cidStr := c.Args().Get(0)
-							maStr := c.Args().Get(1)
-
-							bsCid, err := cid.Decode(cidStr)
-							if err != nil {
-								return err
-							}
-
-							ma, err := multiaddr.NewMultiaddr(maStr)
-							if err != nil {
-								return err
-							}
-
-							output, err := vole.CheckBitswapCID(c.Context, bsCid, ma)
-							if err != nil {
-								return err
-							}
-
-							jsOut, err := json.Marshal(output)
-							if err != nil {
-								return err
-							}
-							fmt.Printf("%s\n", jsOut)
-
-							return nil
-						},
-					},
+					bitswapGetCmd,
+					bitswapCheckCmd,
 				},
 			},
 			{
@@ -317,4 +296,111 @@ func printPeerIDs(ais []*peer.AddrInfo, showAddrs bool) error {
 	}
 
 	return nil
+}
+
+var bitswapGetCmd = &cli.Command{
+	Name: "get",
+	Action: func(cctx *cli.Context) error {
+		if cctx.Args().Len() < 2 {
+			return fmt.Errorf("must pass cid and multiaddr of peer to fetch from")
+		}
+
+		root, err := cid.Decode(cctx.Args().Get(0))
+		if err != nil {
+			return err
+		}
+
+		maddr, err := multiaddr.NewMultiaddr(cctx.Args().Get(1))
+		if err != nil {
+			return err
+		}
+		ai, err := peer.AddrInfoFromP2pAddr(maddr)
+		if err != nil {
+			return err
+		}
+
+		// set up libp2p node...
+		ctx := context.Background()
+		h, err := libp2p.New()
+		if err != nil {
+			return err
+		}
+
+		ds := sync.MutexWrap(datastore.NewMapDatastore())
+		bstore := blockstore.NewBlockstore(ds)
+
+		bsnet := bsnet.NewFromIpfsHost(h, &rhelp.Null{})
+		bswap := bitswap.New(ctx, bsnet, bstore)
+
+		bserv := blockservice.New(bstore, bswap)
+		dag := merkledag.NewDAGService(bserv)
+
+		// connect to our peer
+		if err := h.Connect(ctx, *ai); err != nil {
+			return fmt.Errorf("failed to connect to target peer: %w", err)
+		}
+
+		bar := pb.StartNew(-1)
+		bar.Set(pb.Bytes, true)
+
+		cset := cid.NewSet()
+
+		getLinks := func(ctx context.Context, c cid.Cid) ([]*ipld.Link, error) {
+			if c.Type() == cid.Raw {
+				return nil, nil
+			}
+
+			node, err := dag.Get(ctx, c)
+			if err != nil {
+				return nil, err
+			}
+			bar.Add(len(node.RawData()))
+
+			return node.Links(), nil
+
+		}
+		if err := merkledag.Walk(ctx, getLinks, root, cset.Visit, merkledag.Concurrency(500)); err != nil {
+			return err
+		}
+
+		bar.Finish()
+
+		return nil
+	},
+}
+var bitswapCheckCmd = &cli.Command{
+	Name:        "check",
+	ArgsUsage:   "<cid> <multiaddr>",
+	Usage:       "check if a peer has a CID",
+	Description: "creates a libp2p peer and sends a bitswap request to the target - prints true if the peer reports it has the CID and false otherwise",
+	Action: func(c *cli.Context) error {
+		if c.NArg() != 2 {
+			return fmt.Errorf("invalid number of arguments")
+		}
+		cidStr := c.Args().Get(0)
+		maStr := c.Args().Get(1)
+
+		bsCid, err := cid.Decode(cidStr)
+		if err != nil {
+			return err
+		}
+
+		ma, err := multiaddr.NewMultiaddr(maStr)
+		if err != nil {
+			return err
+		}
+
+		output, err := vole.CheckBitswapCID(c.Context, bsCid, ma)
+		if err != nil {
+			return err
+		}
+
+		jsOut, err := json.Marshal(output)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("%s\n", jsOut)
+
+		return nil
+	},
 }
