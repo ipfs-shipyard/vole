@@ -346,10 +346,6 @@ var bitswapGetCmd = &cli.Command{
 		cset := cid.NewSet()
 
 		getLinks := func(ctx context.Context, c cid.Cid) ([]*ipld.Link, error) {
-			if c.Type() == cid.Raw {
-				return nil, nil
-			}
-
 			node, err := dag.Get(ctx, c)
 			if err != nil {
 				return nil, err
