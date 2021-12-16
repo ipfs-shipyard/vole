@@ -5,10 +5,11 @@ import (
 	"github.com/libp2p/go-libp2p-core/host"
 	quic "github.com/libp2p/go-libp2p-quic-transport"
 	"github.com/libp2p/go-tcp-transport"
+	websocket "github.com/libp2p/go-ws-transport"
 )
 
 func libp2pHost() (host.Host, error) {
-	h, err := libp2p.New(libp2p.Transport(tcp.NewTCPTransport), libp2p.Transport(quic.NewTransport))
+	h, err := libp2p.New(libp2p.Transport(tcp.NewTCPTransport), libp2p.Transport(quic.NewTransport), libp2p.Transport(websocket.New))
 	if err != nil {
 		return nil, err
 	}
