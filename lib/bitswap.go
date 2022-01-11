@@ -2,6 +2,7 @@ package vole
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -20,6 +21,26 @@ type BsCheckOutput struct {
 	Responded bool
 	Error     error
 }
+
+func (o *BsCheckOutput) MarshalJSON() ([]byte, error) {
+	var errorMsg *string
+	if o.Error != nil {
+		m := o.Error.Error()
+		errorMsg = &m
+	}
+	anon := struct {
+		Found     bool
+		Responded bool
+		Error     *string
+	}{
+		Found:     o.Found,
+		Responded: o.Responded,
+		Error:     errorMsg,
+	}
+	return json.Marshal(anon)
+}
+
+var _ json.Marshaler = (*BsCheckOutput)(nil)
 
 func CheckBitswapCID(ctx context.Context, c cid.Cid, ma multiaddr.Multiaddr, getBlock bool) (*BsCheckOutput, error) {
 	h, err := libp2pHost()
