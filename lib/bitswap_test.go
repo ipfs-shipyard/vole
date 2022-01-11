@@ -48,7 +48,7 @@ func TestBitswapCheckPresent(t *testing.T) {
 
 	_ = bitswap.New(ctx, bsnetwork, bstore)
 
-	checkOutput, err := CheckBitswapCID(ctx, blk.Cid(), hostAddrs[0])
+	checkOutput, err := CheckBitswapCID(ctx, blk.Cid(), hostAddrs[0], true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -89,7 +89,7 @@ func TestBitswapCheckNotPresent(t *testing.T) {
 
 	_ = bitswap.New(ctx, bsnetwork, bstore)
 
-	checkOutput, err := CheckBitswapCID(ctx, blk.Cid(), hostAddrs[0])
+	checkOutput, err := CheckBitswapCID(ctx, blk.Cid(), hostAddrs[0], true)
 	if err != nil {
 		t.Fatal(err)
 	}
