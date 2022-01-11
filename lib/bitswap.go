@@ -21,7 +21,7 @@ type BsCheckOutput struct {
 	Error     error
 }
 
-func CheckBitswapCID(ctx context.Context, c cid.Cid, ma multiaddr.Multiaddr) (*BsCheckOutput, error) {
+func CheckBitswapCID(ctx context.Context, c cid.Cid, ma multiaddr.Multiaddr, getBlock bool) (*BsCheckOutput, error) {
 	h, err := libp2pHost()
 	if err != nil {
 		return nil, err
@@ -45,7 +45,12 @@ func CheckBitswapCID(ctx context.Context, c cid.Cid, ma multiaddr.Multiaddr) (*B
 
 	bs := bsnet.NewFromIpfsHost(h, nilRouter)
 	msg := bsmsg.New(false)
-	msg.AddEntry(c, 0, bsmsgpb.Message_Wantlist_Have, true)
+
+	wantType := bsmsgpb.Message_Wantlist_Have
+	if getBlock {
+		wantType = bsmsgpb.Message_Wantlist_Block
+	}
+	msg.AddEntry(c, 0, wantType, true)
 
 	rcv := &bsReceiver{
 		target: target,

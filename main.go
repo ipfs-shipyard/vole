@@ -375,6 +375,7 @@ var bitswapCheckCmd = &cli.Command{
 		}
 		cidStr := c.Args().Get(0)
 		maStr := c.Args().Get(1)
+		getBlock := c.Bool("get-block")
 
 		bsCid, err := cid.Decode(cidStr)
 		if err != nil {
@@ -386,7 +387,7 @@ var bitswapCheckCmd = &cli.Command{
 			return err
 		}
 
-		output, err := vole.CheckBitswapCID(c.Context, bsCid, ma)
+		output, err := vole.CheckBitswapCID(c.Context, bsCid, ma, getBlock)
 		if err != nil {
 			return err
 		}
@@ -398,5 +399,13 @@ var bitswapCheckCmd = &cli.Command{
 		fmt.Printf("%s\n", jsOut)
 
 		return nil
+	},
+	Flags: []cli.Flag{
+		&cli.BoolFlag{
+			Name:        "get-block",
+			Usage:       "get the block",
+			Value:       true,
+			DefaultText: "true",
+		},
 	},
 }
