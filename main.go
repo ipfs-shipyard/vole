@@ -11,7 +11,7 @@ import (
 	ipld "github.com/ipfs/go-ipld-format"
 	madns "github.com/multiformats/go-multiaddr-dns"
 
-	vole "github.com/aschmahmann/vole/lib"
+	vole "github.com/ipfs-shipyard/vole/lib"
 	"github.com/urfave/cli/v2"
 
 	"github.com/ipfs/go-bitswap"

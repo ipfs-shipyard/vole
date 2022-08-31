@@ -1,4 +1,4 @@
-module github.com/aschmahmann/vole
+module github.com/ipfs-shipyard/vole
 
 go 1.17
 
