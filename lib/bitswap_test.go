@@ -13,7 +13,7 @@ import (
 	blockstore "github.com/ipfs/go-ipfs-blockstore"
 	nrouting "github.com/ipfs/go-ipfs-routing/none"
 	"github.com/libp2p/go-libp2p"
-	"github.com/libp2p/go-libp2p-core/peer"
+	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/multiformats/go-multihash"
 )
 
