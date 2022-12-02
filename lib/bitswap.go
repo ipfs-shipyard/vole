@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/ipfs/go-cid"
-	"github.com/libp2p/go-libp2p-core/peer"
+	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/multiformats/go-multiaddr"
 
 	bsmsg "github.com/ipfs/go-bitswap/message"
@@ -78,7 +78,8 @@ func CheckBitswapCID(ctx context.Context, c cid.Cid, ma multiaddr.Multiaddr, get
 		result: make(chan msgOrErr),
 	}
 
-	bs.SetDelegate(rcv)
+	bs.Start(rcv)
+	defer bs.Stop()
 
 	if err := bs.SendMessage(ctx, target, msg); err != nil {
 		return nil, err
