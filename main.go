@@ -11,6 +11,10 @@ import (
 	ipld "github.com/ipfs/go-ipld-format"
 	madns "github.com/multiformats/go-multiaddr-dns"
 
+	// importing so we can traverse dag-cbor and dag-json nodes in the `bitswap get` command
+	_ "github.com/ipld/go-ipld-prime/codec/dagcbor"
+	_ "github.com/ipld/go-ipld-prime/codec/dagjson"
+
 	vole "github.com/ipfs-shipyard/vole/lib"
 	"github.com/urfave/cli/v2"
 
@@ -26,6 +30,7 @@ import (
 	rhelp "github.com/libp2p/go-libp2p-routing-helpers"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/protocol"
+	"github.com/libp2p/go-libp2p/p2p/muxer/mplex"
 	"github.com/multiformats/go-multiaddr"
 	"github.com/multiformats/go-multibase"
 )
@@ -321,7 +326,7 @@ var bitswapGetCmd = &cli.Command{
 
 		// set up libp2p node...
 		ctx := context.Background()
-		h, err := libp2p.New()
+		h, err := libp2p.New(libp2p.DefaultMuxers, libp2p.Muxer("/mplex/6.7.0", mplex.DefaultTransport))
 		if err != nil {
 			return err
 		}
