@@ -273,6 +273,41 @@ func main() {
 					return nil
 				},
 			},
+			{
+				Name:  "libp2p",
+				Usage: "tools for working with libp2p",
+				Subcommands: []*cli.Command{
+					{
+						Name:        "identify",
+						ArgsUsage:   "<multiaddr>",
+						Usage:       "learn about the peer with the given multiaddr",
+						Description: "connects to the target address and runs identify against the peer",
+						Action: func(c *cli.Context) error {
+							if c.NArg() != 1 {
+								return fmt.Errorf("invalid number of arguments")
+							}
+							resp, err := vole.IdentifyRequest(c.Context, c.Args().First())
+							if err != nil {
+								return err
+							}
+
+							fmt.Printf("Protocol version: %q\n", resp.ProtocolVersion)
+							fmt.Printf("Agent version: %q\n", resp.AgentVersion)
+
+							fmt.Println("Listen addresses:")
+							for _, a := range resp.Addresses {
+								fmt.Printf("\t- %q\n", a)
+							}
+
+							fmt.Println("Protocols:")
+							for _, p := range resp.Protocols {
+								fmt.Printf("\t- %q\n", p)
+							}
+							return nil
+						},
+					},
+				},
+			},
 		},
 	}
 
