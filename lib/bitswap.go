@@ -10,10 +10,10 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/multiformats/go-multiaddr"
 
-	bsmsg "github.com/ipfs/go-bitswap/message"
-	bsmsgpb "github.com/ipfs/go-bitswap/message/pb"
-	bsnet "github.com/ipfs/go-bitswap/network"
-	nrouting "github.com/ipfs/go-ipfs-routing/none"
+	bsmsg "github.com/ipfs/boxo/bitswap/message"
+	bsmsgpb "github.com/ipfs/boxo/bitswap/message/pb"
+	bsnet "github.com/ipfs/boxo/bitswap/network"
+	nrouting "github.com/ipfs/boxo/routing/none"
 )
 
 type BsCheckOutput struct {
