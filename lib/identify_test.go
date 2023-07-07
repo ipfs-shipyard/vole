@@ -5,8 +5,14 @@ import (
 	"testing"
 
 	"github.com/libp2p/go-libp2p"
+	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/protocol"
+	"github.com/libp2p/go-libp2p/p2p/security/noise"
+	tls "github.com/libp2p/go-libp2p/p2p/security/tls"
+	quic "github.com/libp2p/go-libp2p/p2p/transport/quic"
+	"github.com/libp2p/go-libp2p/p2p/transport/tcp"
+	ws "github.com/libp2p/go-libp2p/p2p/transport/websocket"
 	"github.com/multiformats/go-multiaddr"
 )
 
@@ -44,7 +50,7 @@ func TestIdentifyRequest(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	resp, err := IdentifyRequest(ctx, hostAddrs[0].String())
+	resp, err := IdentifyRequest(ctx, hostAddrs[0].String(), false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -81,4 +87,73 @@ func TestIdentifyRequest(t *testing.T) {
 			t.Fatalf("expected %s, got %s", a, resp.Protocols[i])
 		}
 	}
+}
+
+func TestDiscoverPeerID(t *testing.T) {
+	runTest := func(t *testing.T, h host.Host) {
+		t.Helper()
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		resp, err := IdentifyRequest(ctx, h.Addrs()[0].String(), true)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if resp.PeerId != h.ID() {
+			t.Fatalf("peerID mismatch: expected %s, got %s", h.ID(), resp.PeerId)
+		}
+	}
+
+	t.Run("tcp+tls", func(t *testing.T) {
+		h, err := libp2p.New(
+			libp2p.Transport(tcp.NewTCPTransport),
+			libp2p.Security(tls.ID, tls.New),
+			libp2p.ListenAddrStrings("/ip4/127.0.0.1/tcp/0"),
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		runTest(t, h)
+	})
+	t.Run("tcp+noise", func(t *testing.T) {
+		h, err := libp2p.New(
+			libp2p.Transport(tcp.NewTCPTransport),
+			libp2p.Security(noise.ID, noise.New),
+			libp2p.ListenAddrStrings("/ip4/127.0.0.1/tcp/0"),
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		runTest(t, h)
+	})
+	t.Run("quic", func(t *testing.T) {
+		h, err := libp2p.New(
+			libp2p.Transport(quic.NewTransport),
+			libp2p.ListenAddrStrings("/ip4/127.0.0.1/udp/0/quic"),
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		runTest(t, h)
+	})
+	t.Run("quic-v1", func(t *testing.T) {
+		h, err := libp2p.New(
+			libp2p.Transport(quic.NewTransport),
+			libp2p.ListenAddrStrings("/ip4/127.0.0.1/udp/0/quic-v1"),
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		runTest(t, h)
+	})
+	t.Run("ws", func(t *testing.T) {
+		h, err := libp2p.New(
+			libp2p.Transport(ws.New),
+			libp2p.ListenAddrStrings("/ip4/127.0.0.1/tcp/0/ws"),
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		runTest(t, h)
+	})
 }
