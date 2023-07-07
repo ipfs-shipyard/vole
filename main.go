@@ -278,19 +278,32 @@ func main() {
 				Usage: "tools for working with libp2p",
 				Subcommands: []*cli.Command{
 					{
-						Name:        "identify",
-						ArgsUsage:   "<multiaddr>",
+						Name:      "identify",
+						ArgsUsage: "<multiaddr>",
+						Flags: []cli.Flag{
+							&cli.BoolFlag{
+								Name: "allow-unknown-peer",
+								Usage: `if the multiaddr does not end with /p2p/PeerID allow trying to determine the peerID at the destination.
+Note: connecting to a peer without knowing its peerID is generally insecure, however it is situationally useful.
+Note: may not work with some transports such as p2p-circuit (not applicable) and webtransport (requires certificate hashes).
+`,
+								DefaultText: "false",
+								Value:       false,
+							},
+						},
 						Usage:       "learn about the peer with the given multiaddr",
 						Description: "connects to the target address and runs identify against the peer",
 						Action: func(c *cli.Context) error {
 							if c.NArg() != 1 {
 								return fmt.Errorf("invalid number of arguments")
 							}
-							resp, err := vole.IdentifyRequest(c.Context, c.Args().First())
+							allowUnknownPeer := c.Bool("allow-unknown-peer")
+							resp, err := vole.IdentifyRequest(c.Context, c.Args().First(), allowUnknownPeer)
 							if err != nil {
 								return err
 							}
 
+							fmt.Printf("PeerID: %q\n", resp.PeerId)
 							fmt.Printf("Protocol version: %q\n", resp.ProtocolVersion)
 							fmt.Printf("Agent version: %q\n", resp.AgentVersion)
 

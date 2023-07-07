@@ -2,25 +2,47 @@ package vole
 
 import (
 	"context"
+	"fmt"
+	"regexp"
 	"sort"
 
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/peerstore"
 	"github.com/libp2p/go-libp2p/core/protocol"
+	"github.com/libp2p/go-libp2p/p2p/net/swarm"
 	"github.com/multiformats/go-multiaddr"
 )
 
 type IdentifyInfo struct {
+	PeerId          peer.ID
 	ProtocolVersion string
 	AgentVersion    string
 	Addresses       []multiaddr.Multiaddr
 	Protocols       []protocol.ID
 }
 
-func IdentifyRequest(ctx context.Context, maStr string) (*IdentifyInfo, error) {
+func IdentifyRequest(ctx context.Context, maStr string, allowUnknownPeer bool) (*IdentifyInfo, error) {
+	usingBogusPeerID := false
+
 	ai, err := peer.AddrInfoFromString(maStr)
 	if err != nil {
-		return nil, err
+		if !allowUnknownPeer {
+			return nil, err
+		}
+		ma, err := multiaddr.NewMultiaddr(maStr)
+		if err != nil {
+			return nil, err
+		}
+
+		bogusPeerId, err := peer.Decode("QmadAdJ3f63JyNs65X7HHzqDwV53ynvCcKtNFvdNaz3nhk")
+		if err != nil {
+			panic("the hard coded bogus peerID is invalid")
+		}
+		usingBogusPeerID = true
+		ai = &peer.AddrInfo{
+			ID:    bogusPeerId,
+			Addrs: []multiaddr.Multiaddr{ma},
+		}
 	}
 
 	h, err := libp2pHost()
@@ -29,10 +51,52 @@ func IdentifyRequest(ctx context.Context, maStr string) (*IdentifyInfo, error) {
 	}
 
 	if err := h.Connect(ctx, *ai); err != nil {
-		return nil, err
+		if !usingBogusPeerID {
+			return nil, err
+		}
+		newPeerId, err := extractPeerIDFromError(err)
+		if err != nil {
+			return nil, err
+		}
+		ai.ID = newPeerId
+		if err := h.Connect(ctx, *ai); err != nil {
+			return nil, err
+		}
 	}
 
 	return extractIdentifyInfo(h.Peerstore(), ai.ID)
+}
+
+func extractPeerIDFromError(inputErr error) (peer.ID, error) {
+	dialErr, ok := inputErr.(*swarm.DialError)
+	if !ok {
+		return "", inputErr
+	}
+	errText := dialErr.DialErrors[0].Cause.Error()
+
+	noiseRe := regexp.MustCompile(`expected\s(.+?),\sbut\sremote\skey\smatches\s(.+?)$`)
+	match := noiseRe.FindStringSubmatch(errText)
+	if len(match) == 3 {
+		remotePeerIDStr := match[2]
+		p, err := peer.Decode(remotePeerIDStr)
+		if err != nil {
+			return "", fmt.Errorf("there was a peerID mismatch but the returned peerID could not be parsed, %w", err)
+		}
+		return p, nil
+	}
+
+	tlsRe := regexp.MustCompile(`expected\s(.+?),\sgot\s(.+?)$`)
+	match = tlsRe.FindStringSubmatch(errText)
+	if len(match) == 3 {
+		remotePeerIDStr := match[2]
+		p, err := peer.Decode(remotePeerIDStr)
+		if err != nil {
+			return "", fmt.Errorf("there was a peerID mismatch but the returned peerID could not be parsed, %w", err)
+		}
+		return p, nil
+	}
+
+	return "", inputErr
 }
 
 func extractIdentifyInfo(ps peerstore.Peerstore, p peer.ID) (*IdentifyInfo, error) {
@@ -44,6 +108,7 @@ func extractIdentifyInfo(ps peerstore.Peerstore, p peer.ID) (*IdentifyInfo, erro
 		return nil, err
 	}
 
+	info.PeerId = addrInfo.ID
 	info.Addresses = addrs
 	sort.Slice(info.Addresses, func(i, j int) bool { return info.Addresses[i].String() < info.Addresses[j].String() })
 
