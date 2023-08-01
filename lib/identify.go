@@ -3,13 +3,12 @@ package vole
 import (
 	"context"
 	"errors"
-	"fmt"
-	"regexp"
 	"sort"
 
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/peerstore"
 	"github.com/libp2p/go-libp2p/core/protocol"
+	"github.com/libp2p/go-libp2p/core/sec"
 	"github.com/libp2p/go-libp2p/p2p/net/swarm"
 	"github.com/multiformats/go-multiaddr"
 )
@@ -73,17 +72,11 @@ func extractPeerIDFromError(inputErr error) (peer.ID, error) {
 	if !errors.As(inputErr, &dialErr) {
 		return "", inputErr
 	}
-	errText := dialErr.DialErrors[0].Cause.Error()
+	innerErr := dialErr.DialErrors[0].Cause
 
-	noiseRe := regexp.MustCompile(`expected\s(.+?),\sbut\sremote\skey\smatches\s(.+?)$`)
-	match := noiseRe.FindStringSubmatch(errText)
-	if len(match) == 3 {
-		remotePeerIDStr := match[2]
-		p, err := peer.Decode(remotePeerIDStr)
-		if err != nil {
-			return "", fmt.Errorf("there was a peerID mismatch but the returned peerID could not be parsed, %w", err)
-		}
-		return p, nil
+	var peerIDMismatchErr sec.ErrPeerIDMismatch
+	if errors.As(innerErr, &peerIDMismatchErr) {
+		return peerIDMismatchErr.Actual, nil
 	}
 
 	return "", inputErr
