@@ -86,17 +86,6 @@ func extractPeerIDFromError(inputErr error) (peer.ID, error) {
 		return p, nil
 	}
 
-	tlsRe := regexp.MustCompile(`expected\s(.+?),\sgot\s(.+?)$`)
-	match = tlsRe.FindStringSubmatch(errText)
-	if len(match) == 3 {
-		remotePeerIDStr := match[2]
-		p, err := peer.Decode(remotePeerIDStr)
-		if err != nil {
-			return "", fmt.Errorf("there was a peerID mismatch but the returned peerID could not be parsed, %w", err)
-		}
-		return p, nil
-	}
-
 	return "", inputErr
 }
 
