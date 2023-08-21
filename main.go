@@ -30,7 +30,7 @@ import (
 	rhelp "github.com/libp2p/go-libp2p-routing-helpers"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/protocol"
-	"github.com/libp2p/go-libp2p/p2p/muxer/mplex"
+	"github.com/libp2p/go-libp2p/p2p/muxer/yamux"
 	"github.com/multiformats/go-multiaddr"
 	"github.com/multiformats/go-multibase"
 )
@@ -374,7 +374,7 @@ var bitswapGetCmd = &cli.Command{
 
 		// set up libp2p node...
 		ctx := context.Background()
-		h, err := libp2p.New(libp2p.DefaultMuxers, libp2p.Muxer("/mplex/6.7.0", mplex.DefaultTransport))
+		h, err := libp2p.New(libp2p.DefaultMuxers, libp2p.Muxer("/yamux/1.0.0", yamux.DefaultTransport))
 		if err != nil {
 			return err
 		}
