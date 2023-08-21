@@ -2,6 +2,7 @@ package vole
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 	"sort"
@@ -68,8 +69,8 @@ func IdentifyRequest(ctx context.Context, maStr string, allowUnknownPeer bool) (
 }
 
 func extractPeerIDFromError(inputErr error) (peer.ID, error) {
-	dialErr, ok := inputErr.(*swarm.DialError)
-	if !ok {
+	var dialErr *swarm.DialError
+	if !errors.As(inputErr, &dialErr) {
 		return "", inputErr
 	}
 	errText := dialErr.DialErrors[0].Cause.Error()
