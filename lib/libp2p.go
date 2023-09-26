@@ -2,8 +2,8 @@ package vole
 
 import (
 	"github.com/libp2p/go-libp2p"
+	"github.com/libp2p/go-libp2p-mplex"
 	"github.com/libp2p/go-libp2p/core/host"
-	"github.com/libp2p/go-libp2p/p2p/muxer/mplex"
 )
 
 func libp2pHost() (host.Host, error) {
