@@ -126,16 +126,6 @@ func TestDiscoverPeerID(t *testing.T) {
 		}
 		runTest(t, h)
 	})
-	t.Run("quic", func(t *testing.T) {
-		h, err := libp2p.New(
-			libp2p.Transport(quic.NewTransport),
-			libp2p.ListenAddrStrings("/ip4/127.0.0.1/udp/0/quic"),
-		)
-		if err != nil {
-			t.Fatal(err)
-		}
-		runTest(t, h)
-	})
 	t.Run("quic-v1", func(t *testing.T) {
 		h, err := libp2p.New(
 			libp2p.Transport(quic.NewTransport),
