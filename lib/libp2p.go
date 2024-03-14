@@ -2,7 +2,7 @@ package vole
 
 import (
 	"github.com/libp2p/go-libp2p"
-	"github.com/libp2p/go-libp2p-mplex"
+	mplex "github.com/libp2p/go-libp2p-mplex"
 	"github.com/libp2p/go-libp2p/core/host"
 )
 
