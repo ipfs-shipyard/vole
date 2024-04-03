@@ -7,19 +7,19 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/p2p/protocol/identify"
 )
 
 func Ping(ctx context.Context, direct bool, p *peer.AddrInfo) error {
-	// Set the activation threshold to 1 so that we learn our own address with just one observation. This lets us holepunch at all.
-	if direct {
-		identify.ActivationThresh = 1
+	if !direct {
+		// We don't want a direct connection, so set this to a high value so
+		// that we don't learn our public address
+		identify.ActivationThresh = 100
 	}
 
-	h, err := libp2p.New(libp2p.EnableHolePunching())
+	h, err := libp2pHost()
 	if err != nil {
 		return err
 	}
