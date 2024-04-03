@@ -313,8 +313,8 @@ Note: may not work with some transports such as p2p-circuit (not applicable) and
 						Flags: []cli.Flag{
 
 							&cli.BoolFlag{
-								Name:        "direct",
-								Usage:       `Ping the peer directly rather than through a relay.`,
+								Name:        "force-relay",
+								Usage:       `Ping the peer over a relay instead of a direct connection`,
 								DefaultText: "false",
 								Value:       false,
 							},
@@ -330,7 +330,7 @@ Note: may not work with some transports such as p2p-circuit (not applicable) and
 							if err != nil {
 								return err
 							}
-							return vole.Ping(c.Context, c.Bool("direct"), ai)
+							return vole.Ping(c.Context, c.Bool("force-relay"), ai)
 						},
 					},
 				},

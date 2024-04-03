@@ -21,7 +21,7 @@ func TestPing(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	if err := Ping(ctx, true, &p); err != nil {
+	if err := Ping(ctx, false, &p); err != nil {
 		t.Fatal(err)
 	}
 }

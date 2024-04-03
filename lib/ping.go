@@ -10,13 +10,20 @@ import (
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/p2p/protocol/identify"
+	"github.com/multiformats/go-multiaddr"
 )
 
-func Ping(ctx context.Context, direct bool, p *peer.AddrInfo) error {
-	if !direct {
+func Ping(ctx context.Context, forceRelay bool, p *peer.AddrInfo) error {
+	if forceRelay {
 		// We don't want a direct connection, so set this to a high value so
 		// that we don't learn our public address
 		identify.ActivationThresh = 100
+
+		for _, addr := range p.Addrs {
+			if _, err := addr.ValueForProtocol(multiaddr.P_CIRCUIT); err != nil {
+				return fmt.Errorf("force-relay=true but peer is not using a relayed address")
+			}
+		}
 	}
 
 	h, err := libp2pHost()
@@ -28,7 +35,7 @@ func Ping(ctx context.Context, direct bool, p *peer.AddrInfo) error {
 
 	times := 3
 
-	if !direct {
+	if forceRelay {
 		ctx = network.WithUseTransient(ctx, "ping")
 	}
 
