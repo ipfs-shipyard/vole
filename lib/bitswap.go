@@ -6,7 +6,13 @@ import (
 	"fmt"
 	"time"
 
+	// importing so we can traverse dag-cbor and dag-json nodes in the `bitswap get` command
+	"github.com/cheggaaa/pb/v3"
+	_ "github.com/ipld/go-ipld-prime/codec/dagcbor"
+	_ "github.com/ipld/go-ipld-prime/codec/dagjson"
+
 	"github.com/ipfs/go-cid"
+	format "github.com/ipfs/go-ipld-format"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/multiformats/go-multiaddr"
 
@@ -14,6 +20,14 @@ import (
 	bsmsgpb "github.com/ipfs/boxo/bitswap/message/pb"
 	bsnet "github.com/ipfs/boxo/bitswap/network"
 	nrouting "github.com/ipfs/boxo/routing/none"
+
+	"github.com/ipfs/boxo/bitswap"
+	"github.com/ipfs/boxo/blockservice"
+	blockstore "github.com/ipfs/boxo/blockstore"
+	"github.com/ipfs/boxo/ipld/merkledag"
+	"github.com/ipfs/go-datastore"
+	"github.com/ipfs/go-datastore/sync"
+	rhelp "github.com/libp2p/go-libp2p-routing-helpers"
 )
 
 type BsCheckOutput struct {
@@ -146,6 +160,52 @@ loop:
 		Responded: false,
 		Error:     nil,
 	}, nil
+}
+
+func GetBitswapCID(root cid.Cid, ai *peer.AddrInfo) error {
+
+	ctx := context.Background()
+	h, err := libp2pHost()
+	if err != nil {
+		return err
+	}
+
+	ds := sync.MutexWrap(datastore.NewMapDatastore())
+	bstore := blockstore.NewBlockstore(ds)
+
+	bsnet := bsnet.NewFromIpfsHost(h, &rhelp.Null{})
+	bswap := bitswap.New(ctx, bsnet, bstore)
+
+	bserv := blockservice.New(bstore, bswap)
+	dag := merkledag.NewDAGService(bserv)
+
+	// connect to our peer
+	if err := h.Connect(ctx, *ai); err != nil {
+		return fmt.Errorf("failed to connect to target peer: %w", err)
+	}
+
+	bar := pb.StartNew(-1)
+	bar.Set(pb.Bytes, true)
+
+	cset := cid.NewSet()
+
+	getLinks := func(ctx context.Context, c cid.Cid) ([]*format.Link, error) {
+		node, err := dag.Get(ctx, c)
+		if err != nil {
+			return nil, err
+		}
+		bar.Add(len(node.RawData()))
+
+		return node.Links(), nil
+
+	}
+	if err := merkledag.Walk(ctx, getLinks, root, cset.Visit, merkledag.Concurrency(500)); err != nil {
+		return err
+	}
+
+	bar.Finish()
+
+	return nil
 }
 
 type bsReceiver struct {
