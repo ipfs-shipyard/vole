@@ -307,6 +307,31 @@ Note: may not work with some transports such as p2p-circuit (not applicable) and
 							}
 							return nil
 						},
+					}, {
+						Name:      "ping",
+						ArgsUsage: "<multiaddr>",
+						Flags: []cli.Flag{
+
+							&cli.BoolFlag{
+								Name:        "force-relay",
+								Usage:       `Ping the peer over a relay instead of a direct connection`,
+								DefaultText: "false",
+								Value:       false,
+							},
+						},
+						Usage:       "ping a peer",
+						Description: "connects to the target address and pings",
+						Action: func(c *cli.Context) error {
+							if c.NArg() != 1 {
+								return fmt.Errorf("invalid number of arguments")
+							}
+							maStr := c.Args().First()
+							ai, err := peer.AddrInfoFromString(maStr)
+							if err != nil {
+								return err
+							}
+							return vole.Ping(c.Context, c.Bool("force-relay"), ai)
+						},
 					},
 				},
 			},
