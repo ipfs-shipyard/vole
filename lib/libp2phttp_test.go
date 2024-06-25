@@ -2,7 +2,6 @@ package vole
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"net/http"
 	"os"
@@ -38,10 +37,9 @@ func TestHTTPProxyAndServer(t *testing.T) {
 
 	go func() {
 		err := Libp2pHTTPSocketProxy(ctx, serverAddr, socketFile.Name())
-		if err != nil {
+		if err != http.ErrServerClosed && err != nil {
 			panic(err)
 		}
-		fmt.Println("err", err)
 	}()
 
 	// Wait a bit to let the proxy start up.
@@ -108,10 +106,9 @@ func TestHTTPProxyAndServerOverHTTPTransport(t *testing.T) {
 
 	go func() {
 		err := Libp2pHTTPSocketProxy(ctx, serverAddr, socketFile.Name())
-		if err != nil {
+		if err != http.ErrServerClosed && err != nil {
 			panic(err)
 		}
-		fmt.Println("err", err)
 	}()
 
 	// Wait a bit to let the proxy start up.
