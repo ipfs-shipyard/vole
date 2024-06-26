@@ -13,6 +13,8 @@ import (
 	"net"
 	"net/http"
 	"net/http/httputil"
+	"net/url"
+	"strconv"
 	"time"
 
 	"github.com/libp2p/go-libp2p/core/host"
@@ -29,44 +31,64 @@ func Libp2pHTTPSocketProxy(ctx context.Context, p multiaddr.Multiaddr, unixSocke
 
 	httpHost := libp2phttp.Host{StreamHost: h}
 
-	ai := peer.AddrInfo{
-		Addrs: []multiaddr.Multiaddr{p},
+	ai, err := peer.AddrInfoFromP2pAddr(p)
+	if err == peer.ErrInvalidAddr {
+		ai = &peer.AddrInfo{Addrs: []multiaddr.Multiaddr{p}} // No peer id
+		err = nil
 	}
-	idStr, err := p.ValueForProtocol(multiaddr.P_P2P)
-	if err == nil {
-		id, err := peer.Decode(idStr)
-		if err != nil {
-			return err
-		}
-		ai.ID = id
+	if err != nil {
+		return err
 	}
 
 	hasTLS := false
 	hasHTTP := false
+	host := ""
+	port := 0
 	multiaddr.ForEach(p, func(c multiaddr.Component) bool {
-		if c.Protocol().Code == multiaddr.P_HTTP {
+		switch c.Protocol().Code {
+		case multiaddr.P_TLS:
+			hasTLS = true
+		case multiaddr.P_HTTP:
 			hasHTTP = true
-		}
-
-		if c.Protocol().Code == multiaddr.P_HTTPS {
+		case multiaddr.P_HTTPS:
 			hasHTTP = true
 			hasTLS = true
+		case multiaddr.P_IP4, multiaddr.P_IP6, multiaddr.P_DNS4, multiaddr.P_DNS6, multiaddr.P_DNS:
+			host = c.Value()
+		case multiaddr.P_TCP, multiaddr.P_UDP:
+			port, err = strconv.Atoi(c.Value())
 			return false
-		}
-
-		if c.Protocol().Code == multiaddr.P_TLS {
-			hasTLS = true
 		}
 		return true
 	})
-
-	rt, err := httpHost.NewConstrainedRoundTripper(ai)
 	if err != nil {
 		return err
 	}
-	rp := &httputil.ReverseProxy{
-		Transport: rt,
-		Director:  func(r *http.Request) {},
+	if port == 0 && hasHTTP {
+		port = 80
+		if hasTLS {
+			port = 443
+		}
+	}
+
+	rt, err := httpHost.NewConstrainedRoundTripper(*ai)
+	if err != nil {
+		return err
+	}
+
+	var rp http.Handler
+	if hasTLS && hasHTTP {
+		u, err := url.Parse("https://" + host + ":" + strconv.Itoa(port) + "/")
+		if err != nil {
+			return err
+		}
+		revProxy := httputil.NewSingleHostReverseProxy(u)
+		rp = revProxy
+	} else {
+		rp = &httputil.ReverseProxy{
+			Transport: rt,
+			Director:  func(r *http.Request) {},
+		}
 	}
 
 	// Serves an HTTP server on the given path using unix sockets
@@ -101,8 +123,8 @@ func Libp2pHTTPSocketProxy(ctx context.Context, p multiaddr.Multiaddr, unixSocke
 	return server.Serve(l)
 }
 
-// Libp2pHTTPServer serves an libp2p enabled HTTP server
-func Libp2pHTTPServer() (host.Host, *libp2phttp.Host, error) {
+// libp2pHTTPServer serves an libp2p enabled HTTP server
+func libp2pHTTPServer() (host.Host, *libp2phttp.Host, error) {
 	h, err := libp2pHost()
 	if err != nil {
 		return nil, nil, err
