@@ -13,15 +13,25 @@ import (
 
 func TestHTTPProxyAndServer(t *testing.T) {
 	// Start libp2p HTTP server
-	h, hh, err := Libp2pHTTPServer()
+	h, hh, err := libp2pHTTPServer()
 	if err != nil {
 		t.Fatal(err)
 	}
+	hh.SetHTTPHandlerAtPath("/hello", "/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
 
 	go hh.Serve()
 	defer hh.Close()
 
 	serverAddr := h.Addrs()[0].Encapsulate(multiaddr.StringCast("/p2p/" + h.ID().String()))
+	port, err := serverAddr.ValueForProtocol(multiaddr.P_TCP)
+	if err != nil || port == "" {
+		port, err = serverAddr.ValueForProtocol(multiaddr.P_UDP)
+		if err != nil || port == "" {
+			t.Fatal("could not get port from server address")
+		}
+	}
 
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
@@ -59,8 +69,7 @@ func TestHTTPProxyAndServer(t *testing.T) {
 		},
 	}
 
-	// TODO update this when https://github.com/libp2p/go-libp2p/pull/2757 lands
-	resp, err := client.Get("http://example.com" + "/.well-known/libp2p")
+	resp, err := client.Get("http://127.0.0.1:" + port + "/")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -128,8 +137,7 @@ func TestHTTPProxyAndServerOverHTTPTransport(t *testing.T) {
 		},
 	}
 
-	// TODO update this when https://github.com/libp2p/go-libp2p/pull/2757 lands
-	resp, err := client.Get("http://example.com/")
+	resp, err := client.Get("http://127.0.0.1:" + port + "/")
 	if err != nil {
 		t.Fatal(err)
 	}
