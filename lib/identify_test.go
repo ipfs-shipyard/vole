@@ -12,6 +12,7 @@ import (
 	tls "github.com/libp2p/go-libp2p/p2p/security/tls"
 	quic "github.com/libp2p/go-libp2p/p2p/transport/quic"
 	"github.com/libp2p/go-libp2p/p2p/transport/tcp"
+	libp2pwebrtc "github.com/libp2p/go-libp2p/p2p/transport/webrtc"
 	ws "github.com/libp2p/go-libp2p/p2p/transport/websocket"
 	"github.com/multiformats/go-multiaddr"
 )
@@ -140,6 +141,16 @@ func TestDiscoverPeerID(t *testing.T) {
 		h, err := libp2p.New(
 			libp2p.Transport(ws.New),
 			libp2p.ListenAddrStrings("/ip4/127.0.0.1/tcp/0/ws"),
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		runTest(t, h)
+	})
+	t.Run("webrtc-direct", func(t *testing.T) {
+		h, err := libp2p.New(
+			libp2p.Transport(libp2pwebrtc.New),
+			libp2p.ListenAddrStrings("/ip4/127.0.0.1/udp/0/webrtc-direct"),
 		)
 		if err != nil {
 			t.Fatal(err)
