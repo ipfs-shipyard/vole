@@ -36,7 +36,7 @@ func Ping(ctx context.Context, forceRelay bool, p *peer.AddrInfo) error {
 	times := 3
 
 	if forceRelay {
-		ctx = network.WithUseTransient(ctx, "ping")
+		ctx = network.WithAllowLimitedConn(ctx, "ping")
 	}
 
 	// Reimplementing ping because the default implementation may use a relayed connection instead of a direct one

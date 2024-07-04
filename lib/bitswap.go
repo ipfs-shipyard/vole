@@ -16,12 +16,10 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/multiformats/go-multiaddr"
 
+	"github.com/ipfs/boxo/bitswap"
 	bsmsg "github.com/ipfs/boxo/bitswap/message"
 	bsmsgpb "github.com/ipfs/boxo/bitswap/message/pb"
 	bsnet "github.com/ipfs/boxo/bitswap/network"
-	nrouting "github.com/ipfs/boxo/routing/none"
-
-	"github.com/ipfs/boxo/bitswap"
 	"github.com/ipfs/boxo/blockservice"
 	blockstore "github.com/ipfs/boxo/blockstore"
 	"github.com/ipfs/boxo/ipld/merkledag"
@@ -73,12 +71,7 @@ func CheckBitswapCID(ctx context.Context, c cid.Cid, ma multiaddr.Multiaddr, get
 
 	target := ai.ID
 
-	nilRouter, err := nrouting.ConstructNilRouting(context.TODO(), nil, nil, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	bs := bsnet.NewFromIpfsHost(h, nilRouter)
+	bs := bsnet.NewFromIpfsHost(h, rhelp.Null{})
 	msg := bsmsg.New(false)
 
 	wantType := bsmsgpb.Message_Wantlist_Have

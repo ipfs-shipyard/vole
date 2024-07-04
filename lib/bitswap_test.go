@@ -3,12 +3,12 @@ package vole
 import (
 	"context"
 	"encoding/json"
+	rhelp "github.com/libp2p/go-libp2p-routing-helpers"
 	"testing"
 
 	"github.com/ipfs/boxo/bitswap"
 	bsnet "github.com/ipfs/boxo/bitswap/network"
 	blockstore "github.com/ipfs/boxo/blockstore"
-	nrouting "github.com/ipfs/boxo/routing/none"
 	blocks "github.com/ipfs/go-block-format"
 	"github.com/ipfs/go-cid"
 	"github.com/ipfs/go-datastore"
@@ -31,12 +31,7 @@ func TestBitswapCheckPresent(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	nilRouter, err := nrouting.ConstructNilRouting(context.TODO(), nil, nil, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	bsnetwork := bsnet.NewFromIpfsHost(h, nilRouter)
+	bsnetwork := bsnet.NewFromIpfsHost(h, rhelp.Null{})
 	bstore := blockstore.NewBlockstore(datastore.NewMapDatastore())
 
 	data := []byte("existing data")
@@ -76,12 +71,7 @@ func TestBitswapCheckNotPresent(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	nilRouter, err := nrouting.ConstructNilRouting(context.TODO(), nil, nil, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	bsnetwork := bsnet.NewFromIpfsHost(h, nilRouter)
+	bsnetwork := bsnet.NewFromIpfsHost(h, rhelp.Null{})
 	bstore := blockstore.NewBlockstore(datastore.NewMapDatastore())
 
 	data := []byte("missing data")
