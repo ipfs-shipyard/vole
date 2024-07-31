@@ -3,8 +3,9 @@ package vole
 import (
 	"context"
 	"encoding/json"
-	rhelp "github.com/libp2p/go-libp2p-routing-helpers"
 	"testing"
+
+	rhelp "github.com/libp2p/go-libp2p-routing-helpers"
 
 	"github.com/ipfs/boxo/bitswap"
 	bsnet "github.com/ipfs/boxo/bitswap/network"
@@ -43,7 +44,7 @@ func TestBitswapCheckPresent(t *testing.T) {
 
 	_ = bitswap.New(ctx, bsnetwork, bstore)
 
-	checkOutput, err := CheckBitswapCID(ctx, blk.Cid(), hostAddrs[0], true)
+	checkOutput, err := CheckBitswapCID(ctx, nil, blk.Cid(), hostAddrs[0], true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -79,7 +80,7 @@ func TestBitswapCheckNotPresent(t *testing.T) {
 
 	_ = bitswap.New(ctx, bsnetwork, bstore)
 
-	checkOutput, err := CheckBitswapCID(ctx, blk.Cid(), hostAddrs[0], true)
+	checkOutput, err := CheckBitswapCID(ctx, nil, blk.Cid(), hostAddrs[0], true)
 	if err != nil {
 		t.Fatal(err)
 	}
