@@ -412,7 +412,7 @@ var bitswapCheckCmd = &cli.Command{
 			return err
 		}
 
-		output, err := vole.CheckBitswapCID(c.Context, bsCid, ma, getBlock)
+		output, err := vole.CheckBitswapCID(c.Context, nil, bsCid, ma, getBlock)
 		if err != nil {
 			return err
 		}

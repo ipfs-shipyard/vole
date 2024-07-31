@@ -13,6 +13,7 @@ import (
 
 	"github.com/ipfs/go-cid"
 	format "github.com/ipfs/go-ipld-format"
+	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/multiformats/go-multiaddr"
 
@@ -54,8 +55,12 @@ func (o *BsCheckOutput) MarshalJSON() ([]byte, error) {
 
 var _ json.Marshaler = (*BsCheckOutput)(nil)
 
-func CheckBitswapCID(ctx context.Context, c cid.Cid, ma multiaddr.Multiaddr, getBlock bool) (*BsCheckOutput, error) {
-	h, err := libp2pHost()
+func CheckBitswapCID(ctx context.Context, h host.Host, c cid.Cid, ma multiaddr.Multiaddr, getBlock bool) (*BsCheckOutput, error) {
+	var err error
+	if h == nil {
+		h, err = libp2pHost()
+	}
+
 	if err != nil {
 		return nil, err
 	}
