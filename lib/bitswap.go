@@ -13,6 +13,7 @@ import (
 
 	"github.com/ipfs/go-cid"
 	format "github.com/ipfs/go-ipld-format"
+	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/multiformats/go-multiaddr"
 
@@ -54,8 +55,14 @@ func (o *BsCheckOutput) MarshalJSON() ([]byte, error) {
 
 var _ json.Marshaler = (*BsCheckOutput)(nil)
 
-func CheckBitswapCID(ctx context.Context, c cid.Cid, ma multiaddr.Multiaddr, getBlock bool) (*BsCheckOutput, error) {
-	h, err := libp2pHost()
+// Passing a libp2p host is optional. Otherwise a temporary host will be created.
+// When passing a host, it should be only connceted to the passed multiaddr
+func CheckBitswapCID(ctx context.Context, h host.Host, c cid.Cid, ma multiaddr.Multiaddr, getBlock bool) (*BsCheckOutput, error) {
+	var err error
+	if h == nil {
+		h, err = libp2pHost()
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -66,6 +73,14 @@ func CheckBitswapCID(ctx context.Context, c cid.Cid, ma multiaddr.Multiaddr, get
 	}
 
 	if err := h.Connect(ctx, *ai); err != nil {
+		return nil, err
+	}
+
+	tctx, cancel := context.WithTimeout(ctx, time.Second*10)
+	defer cancel()
+	// Create a new stream to ensure we wait for hole punching even if it takes longer than the built-in limit in the Bitswap implementation
+	_, err = h.NewStream(tctx, ai.ID, "/ipfs/bitswap/1.2.0", "/ipfs/bitswap/1.1.0", "/ipfs/bitswap/1.0.0", "/ipfs/bitswap")
+	if err != nil {
 		return nil, err
 	}
 
