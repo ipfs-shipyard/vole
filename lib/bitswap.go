@@ -76,7 +76,7 @@ func CheckBitswapCID(ctx context.Context, h host.Host, c cid.Cid, ma multiaddr.M
 
 	tctx, cancel := context.WithTimeout(ctx, time.Second*10)
 	defer cancel()
-	// Create a new stream to ensure hole punching happens
+	// Create a new stream to ensure we wait for hole punching even if it takes longer than the built-in limit in the Bitswap implementation
 	_, err = h.NewStream(tctx, ai.ID, "/ipfs/bitswap/1.2.0", "/ipfs/bitswap/1.1.0", "/ipfs/bitswap/1.0.0", "/ipfs/bitswap")
 	if err != nil {
 		return nil, err
