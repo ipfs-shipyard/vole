@@ -55,6 +55,8 @@ func (o *BsCheckOutput) MarshalJSON() ([]byte, error) {
 
 var _ json.Marshaler = (*BsCheckOutput)(nil)
 
+// Passing a libp2p host is optional. Otherwise a temporary host will be created.
+// When passing a host, it should be only connceted to the passed multiaddr
 func CheckBitswapCID(ctx context.Context, h host.Host, c cid.Cid, ma multiaddr.Multiaddr, getBlock bool) (*BsCheckOutput, error) {
 	var err error
 	if h == nil {
