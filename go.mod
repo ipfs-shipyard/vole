@@ -2,7 +2,6 @@ module github.com/ipfs-shipyard/vole
 
 go 1.22
 
-
 require (
 	github.com/cheggaaa/pb/v3 v3.1.5
 	github.com/ipfs/boxo v0.22.0
