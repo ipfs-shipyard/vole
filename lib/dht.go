@@ -107,6 +107,25 @@ func DhtGetClosestPeers(ctx context.Context, key []byte, proto protocol.ID, ma m
 	return ais, nil
 }
 
+func DhtPing(ctx context.Context, proto protocol.ID, ma multiaddr.Multiaddr) error {
+	ai, err := peer.AddrInfoFromP2pAddr(ma)
+	if err != nil {
+		return err
+	}
+
+	m, err := DhtProtocolMessenger(ctx, proto, ai)
+	if err != nil {
+		return err
+	}
+
+	err = m.Ping(ctx, ai.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // dhtMsgSender handles sending dht wire protocol messages to a given peer
 type dhtMsgSender struct {
 	h         host.Host
