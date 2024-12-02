@@ -234,6 +234,40 @@ func main() {
 							},
 						},
 					},
+					{
+						Name:        "ping",
+						ArgsUsage:   "<multiaddr>",
+						Usage:       "ping a DHT node",
+						Description: "sends a DHT ping to the target",
+						Action: func(c *cli.Context) error {
+							if c.NArg() != 1 {
+								return fmt.Errorf("invalid number of arguments")
+							}
+							maStr := c.Args().Get(0)
+							protoID := c.String("protocolID")
+
+							ma, err := multiaddr.NewMultiaddr(maStr)
+							if err != nil {
+								return err
+							}
+
+							err = vole.DhtPing(c.Context, protocol.ID(protoID), ma)
+							if err != nil {
+								return err
+							}
+
+							fmt.Println("Ok")
+							return nil
+						},
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:        "protocolID",
+								Usage:       "the protocol ID",
+								DefaultText: "/ipfs/kad/1.0.0",
+								Value:       "/ipfs/kad/1.0.0",
+							},
+						},
+					},
 				},
 			},
 			{
