@@ -2,9 +2,13 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 
 	madns "github.com/multiformats/go-multiaddr-dns"
 
@@ -366,13 +370,75 @@ Note: may not work with some transports such as p2p-circuit (not applicable) and
 							}
 							return vole.Ping(c.Context, c.Bool("force-relay"), ai)
 						},
+					}, {
+						Name:      "http",
+						ArgsUsage: "<multiaddr>",
+						Flags: []cli.Flag{
+							&cli.StringFlag{
+								Name:        "socket-path",
+								Usage:       `Use the specified path for the unix socket instead of making a new one.`,
+								DefaultText: "",
+								Value:       "",
+							},
+						},
+						Usage: "Make http requests to the given multiaddr with a unix socket",
+						Description: `This command creates a unix socket that can be used with curl to make HTTP requests to the provided multiaddr.
+Example:
+	vole libp2p http <multiaddr>
+	# Output:
+	# Proxying on:
+	# /tmp/libp2phttp-abc.sock
+
+	# In another terminal
+	curl --unix-socket /tmp/libp2phttp-abc.sock http://.well-known/libp2p/protocols`,
+						Action: func(c *cli.Context) error {
+							if c.NArg() != 1 {
+								return fmt.Errorf("invalid number of arguments")
+							}
+
+							socketPath := c.String("socket-path")
+							if socketPath == "" {
+								f, err := os.CreateTemp("", "libp2phttp-*.sock")
+								if err != nil {
+									return err
+								}
+								// Remove this file since the listen will create it. We just wanted a random unused file path.
+								f.Close()
+								os.Remove(f.Name())
+								socketPath = f.Name()
+							}
+
+							fmt.Println("Proxying on:")
+							fmt.Println(socketPath)
+
+							fmt.Println("\nExample curl request:")
+							fmt.Println("curl --unix-socket", socketPath, "http://example.com/")
+
+							m, err := multiaddr.NewMultiaddr(c.Args().First())
+							if err != nil {
+								return err
+							}
+
+							err = vole.Libp2pHTTPSocketProxy(c.Context, m, socketPath)
+							if err == http.ErrServerClosed {
+								return nil
+							}
+							return err
+						},
 					},
 				},
 			},
 		},
 	}
 
-	err := app.Run(os.Args)
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		defer cancel()
+		sigs := make(chan os.Signal, 1)
+		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+		<-sigs
+	}()
+	err := app.RunContext(ctx, os.Args)
 	if err != nil {
 		panic(err)
 	}
