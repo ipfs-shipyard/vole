@@ -1,6 +1,6 @@
 module github.com/ipfs-shipyard/vole
 
-go 1.24
+go 1.23.8
 
 require (
 	github.com/cheggaaa/pb/v3 v3.1.7
