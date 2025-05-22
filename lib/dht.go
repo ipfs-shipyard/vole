@@ -8,7 +8,7 @@ import (
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/protocol"
-	"github.com/libp2p/go-msgio/protoio" //lint:ignore SA1019 Despite being deprecated we will keep doing this until there are DHT protobufs that are migrated Despite being deprecated we will keep doing this until there are DHT protobufs that are migrated
+	"github.com/libp2p/go-msgio/pbio"
 	"github.com/multiformats/go-multiaddr"
 
 	dhtpb "github.com/libp2p/go-libp2p-kad-dht/pb"
@@ -140,12 +140,12 @@ func (ms *dhtMsgSender) SendRequest(ctx context.Context, p peer.ID, pmes *dhtpb.
 		return nil, err
 	}
 
-	w := protoio.NewDelimitedWriter(s)
+	w := pbio.NewDelimitedWriter(s)
 	if err := w.WriteMsg(pmes); err != nil {
 		return nil, err
 	}
 
-	r := protoio.NewDelimitedReader(s, network.MessageSizeMax)
+	r := pbio.NewDelimitedReader(s, network.MessageSizeMax)
 	tctx, cancel := context.WithTimeout(ctx, ms.timeout)
 	defer cancel()
 	defer func() { _ = s.Close() }()
@@ -159,9 +159,9 @@ func (ms *dhtMsgSender) SendRequest(ctx context.Context, p peer.ID, pmes *dhtpb.
 	return msg, nil
 }
 
-func ctxReadMsg(ctx context.Context, rc protoio.ReadCloser, mes *dhtpb.Message) error {
+func ctxReadMsg(ctx context.Context, rc pbio.ReadCloser, mes *dhtpb.Message) error {
 	errc := make(chan error, 1)
-	go func(r protoio.ReadCloser) {
+	go func(r pbio.ReadCloser) {
 		defer close(errc)
 		err := r.ReadMsg(mes)
 		errc <- err
@@ -183,7 +183,7 @@ func (ms *dhtMsgSender) SendMessage(ctx context.Context, p peer.ID, pmes *dhtpb.
 	}
 	defer func() { _ = s.Close() }()
 
-	w := protoio.NewDelimitedWriter(s)
+	w := pbio.NewDelimitedWriter(s)
 	return w.WriteMsg(pmes)
 }
 
