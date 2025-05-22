@@ -11,6 +11,7 @@ import (
 	_ "github.com/ipld/go-ipld-prime/codec/dagcbor"
 	_ "github.com/ipld/go-ipld-prime/codec/dagjson"
 
+	"github.com/ipfs/boxo/bitswap/network"
 	"github.com/ipfs/go-cid"
 	format "github.com/ipfs/go-ipld-format"
 	"github.com/libp2p/go-libp2p/core/host"
@@ -20,7 +21,7 @@ import (
 	"github.com/ipfs/boxo/bitswap"
 	bsmsg "github.com/ipfs/boxo/bitswap/message"
 	bsmsgpb "github.com/ipfs/boxo/bitswap/message/pb"
-	bsnet "github.com/ipfs/boxo/bitswap/network"
+	bsnet "github.com/ipfs/boxo/bitswap/network/bsnet"
 	"github.com/ipfs/boxo/blockservice"
 	blockstore "github.com/ipfs/boxo/blockstore"
 	"github.com/ipfs/boxo/ipld/merkledag"
@@ -86,7 +87,7 @@ func CheckBitswapCID(ctx context.Context, h host.Host, c cid.Cid, ma multiaddr.M
 
 	target := ai.ID
 
-	bs := bsnet.NewFromIpfsHost(h, rhelp.Null{})
+	bs := bsnet.NewFromIpfsHost(h)
 	msg := bsmsg.New(false)
 
 	wantType := bsmsgpb.Message_Wantlist_Have
@@ -181,8 +182,8 @@ func GetBitswapCID(root cid.Cid, ai *peer.AddrInfo) error {
 	ds := sync.MutexWrap(datastore.NewMapDatastore())
 	bstore := blockstore.NewBlockstore(ds)
 
-	bsnet := bsnet.NewFromIpfsHost(h, &rhelp.Null{})
-	bswap := bitswap.New(ctx, bsnet, bstore)
+	bsnet := bsnet.NewFromIpfsHost(h)
+	bswap := bitswap.New(ctx, bsnet, &rhelp.Null{}, bstore)
 
 	bserv := blockservice.New(bstore, bswap)
 	dag := merkledag.NewDAGService(bserv)
@@ -254,4 +255,4 @@ func (r *bsReceiver) PeerConnected(id peer.ID) {}
 
 func (r *bsReceiver) PeerDisconnected(id peer.ID) {}
 
-var _ bsnet.Receiver = (*bsReceiver)(nil)
+var _ network.Receiver = (*bsReceiver)(nil)

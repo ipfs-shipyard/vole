@@ -8,7 +8,7 @@ import (
 	rhelp "github.com/libp2p/go-libp2p-routing-helpers"
 
 	"github.com/ipfs/boxo/bitswap"
-	bsnet "github.com/ipfs/boxo/bitswap/network"
+	bsnet "github.com/ipfs/boxo/bitswap/network/bsnet"
 	blockstore "github.com/ipfs/boxo/blockstore"
 	blocks "github.com/ipfs/go-block-format"
 	"github.com/ipfs/go-cid"
@@ -32,7 +32,7 @@ func TestBitswapCheckPresent(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	bsnetwork := bsnet.NewFromIpfsHost(h, rhelp.Null{})
+	bsnetwork := bsnet.NewFromIpfsHost(h)
 	bstore := blockstore.NewBlockstore(datastore.NewMapDatastore())
 
 	data := []byte("existing data")
@@ -42,7 +42,7 @@ func TestBitswapCheckPresent(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_ = bitswap.New(ctx, bsnetwork, bstore)
+	_ = bitswap.New(ctx, bsnetwork, rhelp.Null{}, bstore)
 
 	checkOutput, err := CheckBitswapCID(ctx, nil, blk.Cid(), hostAddrs[0], true)
 	if err != nil {
@@ -72,13 +72,13 @@ func TestBitswapCheckNotPresent(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	bsnetwork := bsnet.NewFromIpfsHost(h, rhelp.Null{})
+	bsnetwork := bsnet.NewFromIpfsHost(h)
 	bstore := blockstore.NewBlockstore(datastore.NewMapDatastore())
 
 	data := []byte("missing data")
 	blk := getBlock(t, data)
 
-	_ = bitswap.New(ctx, bsnetwork, bstore)
+	_ = bitswap.New(ctx, bsnetwork, rhelp.Null{}, bstore)
 
 	checkOutput, err := CheckBitswapCID(ctx, nil, blk.Cid(), hostAddrs[0], true)
 	if err != nil {
