@@ -27,7 +27,7 @@ func TestDhtPutGet(t *testing.T) {
 	nsval := record.NamespacedValidator{}
 	nsval["testval"] = &testVal{}
 
-	d, err := dht.New(ctx, h, dht.Mode(dht.ModeServer), dht.ProtocolPrefix("/test"), dht.Validator(nsval))
+	d, err := dht.New(h, dht.Mode(dht.ModeServer), dht.ProtocolPrefix("/test"), dht.Validator(nsval))
 	if err != nil {
 		t.Fatal(err)
 	}
