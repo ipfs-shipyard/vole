@@ -26,7 +26,7 @@ func Ping(ctx context.Context, forceRelay bool, p *peer.AddrInfo) error {
 		}
 	}
 
-	h, err := libp2pHost()
+	h, err := libp2pHost(ctx)
 	if err != nil {
 		return err
 	}

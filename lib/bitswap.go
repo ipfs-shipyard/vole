@@ -61,7 +61,7 @@ var _ json.Marshaler = (*BsCheckOutput)(nil)
 func CheckBitswapCID(ctx context.Context, h host.Host, c cid.Cid, ma multiaddr.Multiaddr, getBlock bool) (*BsCheckOutput, error) {
 	var err error
 	if h == nil {
-		h, err = libp2pHost()
+		h, err = libp2pHost(ctx)
 	}
 
 	if err != nil {
@@ -171,10 +171,8 @@ loop:
 	}, nil
 }
 
-func GetBitswapCID(root cid.Cid, ai *peer.AddrInfo) error {
-
-	ctx := context.Background()
-	h, err := libp2pHost()
+func GetBitswapCID(ctx context.Context, root cid.Cid, ai *peer.AddrInfo) error {
+	h, err := libp2pHost(ctx)
 	if err != nil {
 		return err
 	}

@@ -11,7 +11,7 @@ import (
 )
 
 func OnlyConnect(ctx context.Context, p *peer.AddrInfo) error {
-	h, err := libp2pHost()
+	h, err := libp2pHost(ctx)
 	if err != nil {
 		return err
 	}

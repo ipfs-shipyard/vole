@@ -16,7 +16,7 @@ import (
 )
 
 func DhtProtocolMessenger(ctx context.Context, proto protocol.ID, ai *peer.AddrInfo) (*dhtpb.ProtocolMessenger, error) {
-	h, err := libp2pHost()
+	h, err := libp2pHost(ctx)
 	if err != nil {
 		return nil, err
 	}

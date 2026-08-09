@@ -37,10 +37,29 @@ func main() {
 	app := &cli.App{
 		Name:  "vole",
 		Usage: "a collection of tools for digging around IPFS nodes",
+		Before: func(c *cli.Context) error {
+			pnetPath := c.Path("pnet")
+			if pnetPath == "" {
+				return nil
+			}
+			psk, err := vole.LoadPnetPSK(pnetPath)
+			if err != nil {
+				return err
+			}
+			c.Context = vole.WithPnetPSK(c.Context, psk)
+			return nil
+		},
 		Authors: []*cli.Author{
 			{
 				Name:  "Adin Schmahmann",
 				Email: "adin.schmahmann@gmail.com",
+			},
+		},
+		Flags: []cli.Flag{
+			&cli.PathFlag{
+				Name:  "pnet",
+				Usage: "path to a libp2p private network swarm key file to use for all commands that create a libp2p host",
+				Value: "",
 			},
 		},
 		Commands: []*cli.Command{
@@ -354,7 +373,6 @@ Note: may not work with some transports such as p2p-circuit (not applicable) and
 						Name:      "ping",
 						ArgsUsage: "<multiaddr>",
 						Flags: []cli.Flag{
-
 							&cli.BoolFlag{
 								Name:        "force-relay",
 								Usage:       `Ping the peer over a relay instead of a direct connection`,
@@ -446,7 +464,7 @@ var bitswapGetCmd = &cli.Command{
 			return err
 		}
 
-		return vole.GetBitswapCID(root, ai)
+		return vole.GetBitswapCID(cctx.Context, root, ai)
 	},
 }
 var bitswapCheckCmd = &cli.Command{
